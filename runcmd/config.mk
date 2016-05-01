@@ -9,9 +9,9 @@ MAKE = make
 AR = ar
 TAR = tar 
 
-bin = 
+bin =
 lib = libruncmd
 libruncmd_obj = runcmd.o
 libruncmd_h = runcmd.h
 
-EXTRA_DIST = Makefile config.mk
+EXTRA_DIST = runcmd.txt Makefile config.mk

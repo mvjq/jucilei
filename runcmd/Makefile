@@ -1,3 +1,8 @@
+#TODO:       ####
+#   make uninstall 
+#   make distcheck
+#   make check
+
 include config.mk
 
 lib_static = $(lib:%=%.a)
@@ -13,7 +18,6 @@ proj_src += $(foreach i, $(bin:%=%_obj), $($i:%o=%c))
 
 proj_headers += $(filter %.h, $(shell $(CC) $(CPP_FLAGS) $(CPPFLAGS) -I. -MM -MG -MT " " $(proj_src)) )
 proj_headers += $(inst_headers)
-
 proj_dep = $(proj_src:%.c=%.d)
 
 all: $(lib_all) $(bin)
@@ -21,10 +25,20 @@ all: $(lib_all) $(bin)
 %.d : %.c
 	$(CC) $(CPP_FLAGS) $(CPPFLAGS) -I. -MM -MG -MT $(C_FLAGS) $(CFLAGS) '$(<:.c=.o) $(<:.c=-pic.o) $@' $< > $@
 
+
+#Didnt have time to make it a pattern
+test.o: test.c debug.h
+	$(CC) -c $< $(LDFLAGS) $(LD_FLAGS) $(CPPFLAGS) $(CPP_FLAGS) -I. $(CFLAGS) $(C_FLAGS) -o $@
+test: test.o runcmd.o
+	$(CC) $^ -o $@
+#just to test runcmd
+
+
+
+
 .SECONDEXPANSION:
 $(lib_static): %.a : $$($$*_obj)
 	$(AR) rcs $@ $^
-
 
 $(lib_shared) : %.so : $$($$*_obj:.o=-pic.o)
 	$(CC) -shared $(LD_FLAGS) $(LDFLAGS) -L. $^ -o $@
@@ -57,4 +71,4 @@ $(PROJECT).tgz: $(proj_src) $(proj_headers)
 	rm -rf $(PROJECT)
 
 clean:
-	rm *.o *.a *.so $(bin) $(lib)
+	rm *.d *.o *.a *.so $(bin) $(lib)

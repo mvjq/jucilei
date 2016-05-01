@@ -2,7 +2,7 @@
 #define RUNCMD_H
 
 #define RCMD_MAXARGS 1024
-#define RCMD_DELIM "\n\t\r" 
+#define RCMD_DELIM " \n\t\r" 
 #define RCMD_MAXARGS 1024
 
 #define NORTERM (1<<8)
