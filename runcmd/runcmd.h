@@ -11,10 +11,10 @@
 #define RETSTATUS (0xFF)
 #define EXITFAILSTATUS (127)
 
-#define IS_NORTERM(res) ((res & NORTERM))
-#define IS_NONBLOCK(res) ((res & NONBLOCK))
-#define EXITSTATUS(res) ((res & RETSTATUS))
-#define IS_EXECOK(res) ((res & EXECOK))
+#define IS_NORTERM(res) ((res & NORTERM) && 1)
+#define IS_NONBLOCK(res) ((res & NONBLOCK) && 1)
+#define EXITSTATUS(res) (res & RETSTATUS)
+#define IS_EXECOK(res) ((res & EXECOK) && 1)
 
 int runcmd(const char *command, int *result, int *io);
 

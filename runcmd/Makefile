@@ -71,4 +71,5 @@ $(PROJECT).tgz: $(proj_src) $(proj_headers)
 	rm -rf $(PROJECT)
 
 clean:
-	rm *.d *.o *.a *.so $(bin) $(lib)
+	rm *.d *.o *.a *.so $(bin)
+	rm $(PROJECT).tgz
