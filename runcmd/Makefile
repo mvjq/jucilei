@@ -27,12 +27,11 @@ all: $(lib_all) $(bin)
 
 
 #Didnt have time to make it a pattern
-test.o: test.c debug.h
-	$(CC) -c $< $(LDFLAGS) $(LD_FLAGS) $(CPPFLAGS) $(CPP_FLAGS) -I. $(CFLAGS) $(C_FLAGS) -o $@
-test: test.o runcmd.o
-	$(CC) $^ -o $@
-#just to test runcmd
-
+#test.o: test.c debug.h
+#	$(CC) -c $< $(LDFLAGS) $(LD_FLAGS) $(CPPFLAGS) $(CPP_FLAGS) -I. $(CFLAGS) $(C_FLAGS) -o $@
+#test: test.o runcmd.o
+#	$(CC) $^ -o $@
+#just to quickly test runcmd
 
 
 
