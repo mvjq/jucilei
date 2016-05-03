@@ -1,5 +1,4 @@
 #TODO:       ####
-#   make uninstall 
 #   make distcheck
 #   make check
 
@@ -27,10 +26,10 @@ all: $(lib_all) $(bin)
 
 
 #Didnt have time to make it a pattern
-#test.o: test.c debug.h
-#	$(CC) -c $< $(LDFLAGS) $(LD_FLAGS) $(CPPFLAGS) $(CPP_FLAGS) -I. $(CFLAGS) $(C_FLAGS) -o $@
-#test: test.o runcmd.o
-#	$(CC) $^ -o $@
+test.o: test.c debug.h
+	$(CC) -c $< $(LDFLAGS) $(LD_FLAGS) $(CPPFLAGS) $(CPP_FLAGS) -I. $(CFLAGS) $(C_FLAGS) -o $@
+test: test.o runcmd.o
+	$(CC) $^ -o $@
 #just to quickly test runcmd
 
 
@@ -50,7 +49,7 @@ $(lib_shared) : %.so : $$($$*_obj:.o=-pic.o)
 
 -include $(proj_dep)
 
-.PHONY: clean install dist
+.PHONY: clean install dist uninstall
 
 install: $(bin) $(lib_all) $(inst_headers)
 	install -d $(PREFIX)/bin
@@ -59,6 +58,11 @@ install: $(bin) $(lib_all) $(inst_headers)
 	cp $(lib_all) $(PREFIX)/lib
 	cp $(inst_headers) $(PREFIX)/include
 	for i in $(bin); do if test -f $$i; then cp $$i $(PREFIX)/bin; fi done
+
+uninstall:
+	for i in $(lib_all); do rm -rf $(PREFIX)/lib/$$i; done
+	for i in $(bin); do rm -rf $(PREFIX)/bin/$$i; done
+
 
 dist: $(PROJECT).tgz
 

@@ -39,14 +39,14 @@ int runcmd (const char *command, int *result, int *io) {
 
             tmp_result |= NORTERM | WEXITSTATUS(status);
 
-            if (!read(pipefd[0], &aux, 4)) { /*this means that the child didn't wrote something in it, which only happens if exec failed*/
+            if (!read(pipefd[0], &aux, 4)) { /*this means that the child didn't wrote something in it, which only happens if exec fails*/
                 tmp_result |= EXECOK;
             }
         }
     } 
     else { /*child*/
-        char *args[RCMD_MAXARGS], *token;
 
+        char *args[RCMD_MAXARGS], *token;
         close(pipefd[0]);
         strcpy(cmd, command);
         token = strtok(cmd, RCMD_DELIM); 
