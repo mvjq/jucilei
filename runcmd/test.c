@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
 
 
     printf("IS_EXECOK %d\n", IS_EXECOK(res));
-    printf("IS_NORTERM %d\n", IS_NORTERM(res));
+    printf("IS_NORMTERM %d\n", IS_NORMTERM(res));
     printf("EXITSTATUS %d\n", EXITSTATUS(res));
 
 

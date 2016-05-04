@@ -6,13 +6,13 @@
 #define RCMD_MAXARGS 1024
 #define RCMD_NONBLOCK '&'
 
-#define NORTERM (1 << 8)
+#define NORMTERM (1 << 8)
 #define EXECOK (1 << 9)
 #define NONBLOCK (1 << 10)
 #define RETSTATUS (0xFF)
-#define EXITFAILSTATUS (127)
+#define EXECFAILSTATUS (127)
 
-#define IS_NORTERM(res) ((res & NORTERM) && 1)
+#define IS_NORMTERM(res) ((res & NORMTERM) && 1)
 #define IS_NONBLOCK(res) ((res & NONBLOCK) && 1)
 #define EXITSTATUS(res) ((res) & RETSTATUS)
 #define IS_EXECOK(res) ((res & EXECOK) && 1)

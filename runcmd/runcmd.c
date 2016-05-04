@@ -9,7 +9,6 @@
 /*
 if runcmd returns -1, it could be pipe error, fork error, or wait for child process error
  */
-
 int runcmd (const char *command, int *result, int *io) {
 
     int i, pipers, pipefd[2], aux, status, tmp_result;
@@ -34,7 +33,7 @@ int runcmd (const char *command, int *result, int *io) {
         sysfail (aux<0, -1);
         if (WIFEXITED(status)) {
 
-            tmp_result |= NORTERM | WEXITSTATUS(status);
+            tmp_result |= NORMTERM | WEXITSTATUS(status);
 
             if (!read(pipefd[0], NULL, 1)) { /*this means that the child didn't write something in it, which only happens if exec fails*/
                 tmp_result |= EXECOK;
@@ -60,7 +59,7 @@ int runcmd (const char *command, int *result, int *io) {
         /*I'm using pipe to send a message to the caller*/
         write(pipefd[1], "1", 1);
         close(pipefd[1]);
-        exit(EXITFAILSTATUS);
+        exit(EXECFAILSTATUS);
     }
     if (result)
         *result=tmp_result;
