@@ -3,12 +3,11 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include "runcmd.h"
+#include <runcmd.h>
 #include "debug.h"
 
 /*
 if runcmd returns -1, it could be pipe error, fork error, or wait for child process error
-TODO: show those error messages maybe
  */
 
 int runcmd (const char *command, int *result, int *io) {
@@ -22,24 +21,22 @@ int runcmd (const char *command, int *result, int *io) {
 
     pipers = pipe(pipefd);
 
-    if (pipers == -1)
-        return -1;
+    sysfail (pipers==-1, -1);
 
     pid = fork();
-    if (pid < 0)
-        return -1;
+    sysfail (pid<0, -1);
 
     if (pid > 0) { /*parent*/
 
         close (pipefd[1]); /*close writing end*/
         aux = wait(&status); 
-        if (aux < 0)
-            return -1;
+
+        sysfail (aux<0, -1);
         if (WIFEXITED(status)) {
 
             tmp_result |= NORTERM | WEXITSTATUS(status);
 
-            if (!read(pipefd[0], &aux, 4)) { /*this means that the child didn't wrote something in it, which only happens if exec fails*/
+            if (!read(pipefd[0], NULL, 1)) { /*this means that the child didn't write something in it, which only happens if exec fails*/
                 tmp_result |= EXECOK;
             }
         }
@@ -61,8 +58,7 @@ int runcmd (const char *command, int *result, int *io) {
         /*if we got here, it means args[0] can't be executed :(*/
         /*we got to do something to differ this case from the case where the process itself returns EXITFAILSTATUS*/
         /*I'm using pipe to send a message to the caller*/
-        aux=EXITFAILSTATUS;
-        write(pipefd[1], &aux, 4);
+        write(pipefd[1], "1", 1);
         close(pipefd[1]);
         exit(EXITFAILSTATUS);
     }
