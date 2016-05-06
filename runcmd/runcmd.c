@@ -78,7 +78,7 @@ int runcmd (const char *command, int *result, int *io) {
         /*I'm using pipe to send a message to the caller*/
         write (pipefd[1], "1", 1);
         close (pipefd[1]);
-        /*free(cmd);*/
+        free(cmd);
         exit(EXECFAILSTATUS);
     }
     if (result)

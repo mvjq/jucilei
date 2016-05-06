@@ -85,7 +85,6 @@ uninstall:
 	for i in $(lib_all); do rm -rf $(PREFIX)/lib/$$i; done
 	for i in $(bin); do rm -rf $(PREFIX)/bin/$$i; done
 
-
 dist: $(PROJECT).tgz
 
 $(PROJECT).tgz: $(proj_src) $(proj_headers)
