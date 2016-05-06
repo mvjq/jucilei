@@ -78,7 +78,10 @@ int runcmd (const char *command, int *result, int *io) {
         /*I'm using pipe to send a message to the caller*/
         write (pipefd[1], "1", 1);
         close (pipefd[1]);
+
+        /*this free here fixes the memory leak when exec fails*/
         free(cmd);
+
         exit(EXECFAILSTATUS);
     }
     if (result)
