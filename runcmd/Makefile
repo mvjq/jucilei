@@ -1,3 +1,22 @@
+#    Makefile, Copyright 2016 Danilo Tedeschi <danfyty@gmail.com>
+#    Makefile is derived from posixeg, Copyright 2014  Monaco F. J.   <monaco@icmc.usp.br>
+#
+#    This file is part of Jucilei
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with .  If not, see <http://www.gnu.org/licenses/>. 
+
+
 #TODO:       ####
 #   make distcheck
 #   make check
@@ -9,7 +28,6 @@ lib_shared = $(lib:%=%.so)
 
 lib_all = $(lib_static) $(lib_shared)
 
-#idk why the _h
 inst_headers = $(foreach i, $(lib:%=%_h), $($i))
 
 proj_src += $(foreach i, $(lib:%=%_obj), $($i:%o=%c))
