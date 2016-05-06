@@ -50,6 +50,10 @@ test: test.o runcmd.o
 	$(CC) $^ -o $@
 #just to quickly test runcmd
 
+#must have valgrind
+test_leak: test
+	#runs a command which doesnt exist
+	valgrind ./test lsa
 
 
 .SECONDEXPANSION:

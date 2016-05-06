@@ -1,4 +1,5 @@
-/*
+/*  test.c - receives a command line and uses libruncmd to execut it and shows the return values
+
     Copyright (c) Danilo Tedeschi 2016  <danfyty@gmail.com>
 
     This file is part of Jucilei.
@@ -27,8 +28,12 @@ int main(int argc, char **argv) {
     char cmd[1024];
     int res, io[2];
 
-    fgets(cmd, 1023, stdin);
-    cmd[strlen(cmd)-1]='\0';
+    if (argc > 1)
+        strcpy(cmd, argv[1]);
+    else {
+        fgets(cmd, 1023, stdin);
+        cmd[strlen(cmd)-1]='\0';
+    }
 
     runcmd(cmd, &res, io);
 
