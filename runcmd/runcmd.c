@@ -76,8 +76,9 @@ int runcmd (const char *command, int *result, int *io) {
         /*if we got here, it means args[0] can't be executed :(*/
         /*we got to do something to differ this case from the case where the process itself returns EXITFAILSTATUS*/
         /*I'm using pipe to send a message to the caller*/
-        write(pipefd[1], "1", 1);
-        close(pipefd[1]);
+        write (pipefd[1], "1", 1);
+        close (pipefd[1]);
+        /*free(cmd);*/
         exit(EXECFAILSTATUS);
     }
     if (result)
