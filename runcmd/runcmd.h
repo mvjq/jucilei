@@ -29,15 +29,22 @@
 #define EXECOK (1 << 9)
 #define NONBLOCK (1 << 10)
 #define RETSTATUS (0xFF)
-#define EXECFAILSTATUS (127)
+#define EXECFAILSTATUS 127
 
 #define IS_NORMTERM(res) (((res) & NORMTERM) && 1)
 #define IS_NONBLOCK(res) (((res) & NONBLOCK) && 1)
 #define EXITSTATUS(res) ((res) & RETSTATUS)
 #define IS_EXECOK(res) (((res) & EXECOK) && 1)
 
-int runcmd(const char *command, int *result, int *io);
 
+/*
+    if *io isn't NULL it must have 3 entries
+    if one of the entries is NULL, no redirection for that entrie is done, so if you don't want to redirect stderr just make io[2]=NULL
+ */
+
+int runcmd(const char *command, int *result, const int *io);
+
+/*this function is called assyncronly when SIGCHLD is received*/
 extern void (*runcmd_onexit)(void);
 
 #endif

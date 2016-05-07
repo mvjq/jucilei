@@ -27,8 +27,10 @@
 
 /*
 if runcmd returns -1, it could be pipe error, fork error, or wait for child process error
+if *io is not NULL it should have 3 entries, otherwise we will have segmentation fault
  */
-int runcmd (const char *command, int *result, int *io) {
+
+int runcmd (const char *command, int *result, const int *io) {
 
     int i, pipers, pipefd[2], aux, status, tmp_result;
     char *cmd;
@@ -54,23 +56,35 @@ int runcmd (const char *command, int *result, int *io) {
 
             tmp_result |= NORMTERM | WEXITSTATUS(status);
 
-            if (!read(pipefd[0], NULL, 1)) { /*this means that the child didn't write something in it, which only happens if exec fails*/
+            /*this means that the child didn't write something in it, which only happens if exec fails*/
+            if (!read(pipefd[0], NULL, 1)) 
                 tmp_result |= EXECOK;
-            }
         }
     } 
     else { /*child*/
 
         char *args[RCMD_MAXARGS], *token;
-        close(pipefd[0]);
+        close(pipefd[0]); /*close the unused pipe end*/
         strcpy(cmd, command);
-        token = strtok(cmd, RCMD_DELIM); 
+
+        /*parse the comand given*/
+        token = strtok(cmd, RCMD_DELIM);
         for (i = 0; i < RCMD_MAXARGS && token != NULL; ++i) {
             args[i] = token;
             token = strtok(NULL, RCMD_DELIM);
         }
-
         args[i] = NULL;
+
+        /*now we have to make the file descriptors in *io to be fake stdin,stdout,stderr*/
+        if (io) {
+            if (io[STDIN_FILENO]) 
+                dup2(io[STDIN_FILENO], STDOUT_FILENO);
+            if (io[STDOUT_FILENO])
+                dup2(io[STDOUT_FILENO], STDOUT_FILENO);
+            if (io[STDERR_FILENO])
+                dup2(io[STDERR_FILENO], STDERR_FILENO);
+        }
+
         execvp(args[0], args);
 
         /*if we got here, it means args[0] can't be executed :(*/
