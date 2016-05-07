@@ -39,7 +39,8 @@
 
 /*
     if *io isn't NULL it must have 3 entries
-    if one of the entries is NULL, no redirection for that entrie is done, so if you don't want to redirect stderr just make io[2]=NULL
+    if one of the entries is < 0, no redirection for that entrie is done, 
+    so, if you don't want to redirect stderr just make io[2]=NULL
  */
 
 int runcmd(const char *command, int *result, const int *io);

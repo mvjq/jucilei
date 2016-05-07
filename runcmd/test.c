@@ -20,13 +20,23 @@
 */
 #include <runcmd.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 
 int main(int argc, char **argv) {
 
     char cmd[1024];
-    int res, io[2];
+    int res, io[3];
+    char *fil[3]={"input.txt", "output.txt", "err.txt"};
+
+    /*io[STDIN_FILENO]=open(fil[STDIN_FILENO], O_RDONLY);
+    io[STDOUT_FILENO]=open(fil[STDOUT_FILENO], O_WRONLY);
+    io[STDERR_FILENO]=open(fil[STDERR_FILENO], O_WRONLY);
+    */
 
     if (argc > 1)
         strcpy(cmd, argv[1]);
@@ -35,10 +45,15 @@ int main(int argc, char **argv) {
         cmd[strlen(cmd)-1]='\0';
     }
 
-    runcmd(cmd, &res, io);
+
+    runcmd(cmd, &res, NULL);
 
     printf("[res]=%d\n", res);
 
+    /*close(io[STDIN_FILENO]);
+    close(io[STDOUT_FILENO]);
+    close(io[STDERR_FILENO]);
+    */
 
     printf("IS_EXECOK %d\n", IS_EXECOK(res));
     printf("IS_NORMTERM %d\n", IS_NORMTERM(res));
