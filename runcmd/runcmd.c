@@ -25,11 +25,24 @@
 #include <runcmd.h>
 #include "debug.h"
 
+
+/*list of callback functions for nonblocking executions of runcmd*/
+typedef struct _nonblocking_callback_t {
+    pid_t child_pid; /*child process pid*/
+    struct _nonblocking_callback_t *next; /*pointer to the next if this is set to NULL this is the last one*/
+    void (*runcmd_onexit) (void);
+} _nonblocking_callback_t;
+
+
+void _sigchld_handler (int sig) {
+
+}
+
+
 /*
 if runcmd returns -1, it could be pipe error, fork error, or wait for child process error
 if *io is not NULL it should have 3 entries, otherwise we will have segmentation fault
  */
-
 int runcmd (const char *command, int *result, const int *io) {
 
     int i, pipers, pipefd[2], aux, status, tmp_result;
@@ -56,6 +69,7 @@ int runcmd (const char *command, int *result, const int *io) {
         tmp_result |= pch!=NULL ? NONBLOCK : 0;
 
         if (IS_NONBLOCK(tmp_result)) {
+            /*assign void _sig_handler(int) to SIGCHLD*/
 
         }
         else
