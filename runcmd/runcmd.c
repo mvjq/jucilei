@@ -22,6 +22,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <signal.h>
 #include <runcmd.h>
 #include "debug.h"
 
@@ -35,7 +36,7 @@ typedef struct _nonblocking_callback_t {
 
 
 void _sigchld_handler (int sig) {
-
+    printf("A\n");
 }
 
 
@@ -69,8 +70,13 @@ int runcmd (const char *command, int *result, const int *io) {
         tmp_result |= pch!=NULL ? NONBLOCK : 0;
 
         if (IS_NONBLOCK(tmp_result)) {
-            /*assign void _sig_handler(int) to SIGCHLD*/
+            struct sigaction act;
+            act.sa_flags = SA_SIGINFO;
+            sigemptyset (&act.sa_mask);
+            act.sa_handler = &(_sigchld_handler);
 
+            /*assign void _sig_handler(int) to SIGCHLD*/
+            sigaction(SIGCHLD, &act, NULL);
         }
         else
             aux = wait(&status); 

@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
     char cmd[1024];
     int res, io[3];
     char *fil[3]={"input.txt", "output.txt", "err.txt"};
+    const char *c1 = "sleep 1 &";
 
     /*io[STDIN_FILENO]=open(fil[STDIN_FILENO], O_RDONLY);
     io[STDOUT_FILENO]=open(fil[STDOUT_FILENO], O_WRONLY);
@@ -41,12 +42,13 @@ int main(int argc, char **argv) {
     if (argc > 1)
         strcpy(cmd, argv[1]);
     else {
-        fgets(cmd, 1023, stdin);
-        cmd[strlen(cmd)-1]='\0';
+        /*fgets(cmd, 1023, stdin); */
+        /*cmd[strlen(cmd)-1]='\0'; */
     }
 
 
-    runcmd(cmd, &res, NULL);
+    /*runcmd(cmd, &res, NULL); */
+    runcmd(c1, &res, NULL);
 
     printf("[res]=%d\n", res);
 
