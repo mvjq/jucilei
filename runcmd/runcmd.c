@@ -28,15 +28,38 @@
 
 
 /*list of callback functions for nonblocking executions of runcmd*/
-typedef struct _nonblocking_callback_t {
+typedef struct nonblocking_callback_t {
     pid_t child_pid; /*child process pid*/
-    struct _nonblocking_callback_t *next; /*pointer to the next if this is set to NULL this is the last one*/
+    struct nonblocking_callback_t **next; /*pointer to the next if this is set to NULL this is the last one*/
     void (*runcmd_onexit) (void);
-} _nonblocking_callback_t;
+} nonblocking_callback_t;
 
 
+nonblocking_callback_t *nonblocking_callback_list = NULL;
+
+/**/
 void _sigchld_handler (int sig) {
-    printf("A\n");
+    nonblocking_callback_t *ptr = nonblocking_callback_list;
+
+    /*we have to go thru all the children and check if it's dead*/
+    /*Not working yet!*/
+    while (ptr != NULL) {
+        printf("[pid] = %d\n", ptr->child_pid);
+        /* WNOHANG returns immediately if nothing happend to the process
+           waitpid returns 0 if nothing happend
+        if (waitpid (ptr->child_pid, &status, WNOHANG))
+         */
+        ptr = *(ptr->next);
+    }
+    puts("-------\n");
+}
+
+void register_child_callback (pid_t pid) {
+    nonblocking_callback_t *new_head = malloc (sizeof (nonblocking_callback_t));
+    new_head->runcmd_onexit = runcmd_onexit;
+    new_head->next = &nonblocking_callback_list;
+    new_head->child_pid = pid;
+    nonblocking_callback_list = new_head;
 }
 
 
@@ -64,7 +87,8 @@ int runcmd (const char *command, int *result, const int *io) {
 
         close (pipefd[1]); /*close writing end*/
 
-        pch = memchr(command, '&', strlen(command));
+        /*checks if '&' is present in the string command*/
+        pch = memchr(command, RCMD_NONBLOCK, strlen(command));
 
         /*if a '&' is found it is a non-blocking one.*/
         tmp_result |= pch!=NULL ? NONBLOCK : 0;
@@ -73,7 +97,7 @@ int runcmd (const char *command, int *result, const int *io) {
             struct sigaction act;
             act.sa_flags = SA_SIGINFO;
             sigemptyset (&act.sa_mask);
-            act.sa_handler = &(_sigchld_handler);
+            act.sa_handler = &_sigchld_handler;
 
             /*assign void _sig_handler(int) to SIGCHLD*/
             sigaction(SIGCHLD, &act, NULL);

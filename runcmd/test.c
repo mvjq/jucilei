@@ -30,9 +30,13 @@
 int main(int argc, char **argv) {
 
     char cmd[1024];
-    int res, io[3];
+    int i, res, io[3];
     char *fil[3]={"input.txt", "output.txt", "err.txt"};
-    const char *c1 = "sleep 1 &";
+    const char *cmd1[] = {"sleep 10 &",
+    "sleep 10 &",
+    "sleep 10 &",
+    "sleep 10 &",
+    "sleep 1 &" };
 
     /*io[STDIN_FILENO]=open(fil[STDIN_FILENO], O_RDONLY);
     io[STDOUT_FILENO]=open(fil[STDOUT_FILENO], O_WRONLY);
@@ -48,18 +52,20 @@ int main(int argc, char **argv) {
 
 
     /*runcmd(cmd, &res, NULL); */
-    runcmd(c1, &res, NULL);
+    for (i=0;i<4;i++) {
+        runcmd(cmd1[i], &res, NULL);
+        printf("%s -> [res]=%d\n", cmd1[i], res);
 
-    printf("[res]=%d\n", res);
+        /*close(io[STDIN_FILENO]);
+          close(io[STDOUT_FILENO]);
+          close(io[STDERR_FILENO]);
+         */
 
-    /*close(io[STDIN_FILENO]);
-    close(io[STDOUT_FILENO]);
-    close(io[STDERR_FILENO]);
-    */
-
-    printf("IS_EXECOK %d\n", IS_EXECOK(res));
-    printf("IS_NORMTERM %d\n", IS_NORMTERM(res));
-    printf("EXITSTATUS %d\n", EXITSTATUS(res));
+        printf("IS_EXECOK %d\n", IS_EXECOK(res));
+        printf("IS_NORMTERM %d\n", IS_NORMTERM(res));
+        printf("EXITSTATUS %d\n", EXITSTATUS(res));
+        printf("IS_NONBLOCK %d\n", IS_NONBLOCK(res));
+    }
 
 
     return 0;

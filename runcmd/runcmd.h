@@ -37,6 +37,7 @@
 #define IS_EXECOK(res) (((res) & EXECOK) && 1)
 
 
+
 /*
     if *io isn't NULL it must have 3 entries
     if one of the entries is < 0, no redirection for that entrie is done, 
