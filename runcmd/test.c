@@ -27,16 +27,38 @@
 #include <stdlib.h>
 #include <string.h>
 
+void f1() {
+    puts("A");
+}
+void f2() {
+    puts("B");
+}
+void f3() {
+    puts("C");
+}
+void f4() {
+    puts("D");
+}
+
 int main(int argc, char **argv) {
 
     char cmd[1024];
     int i, res, io[3];
+
     char *fil[3]={"input.txt", "output.txt", "err.txt"};
-    const char *cmd1[] = {"sleep 10 &",
-    "sleep 10 &",
-    "sleep 10 &",
-    "sleep 10 &",
+    void (*ffx[4]) (void);
+
+    const char *cmd1[] = 
+    {"sleep 5 &",
+    "sleep 4 &",
+    "sleep 3 &",
+    "sleep 2 &",
     "sleep 1 &" };
+
+    ffx[0]=f1;
+    ffx[1]=f2;
+    ffx[2]=f3;
+    ffx[3]=f4;
 
     /*io[STDIN_FILENO]=open(fil[STDIN_FILENO], O_RDONLY);
     io[STDOUT_FILENO]=open(fil[STDOUT_FILENO], O_WRONLY);
@@ -53,6 +75,7 @@ int main(int argc, char **argv) {
 
     /*runcmd(cmd, &res, NULL); */
     for (i=0;i<4;i++) {
+        runcmd_onexit=ffx[i];
         runcmd(cmd1[i], &res, NULL);
         printf("%s -> [res]=%d\n", cmd1[i], res);
 
@@ -65,7 +88,9 @@ int main(int argc, char **argv) {
         printf("IS_NORMTERM %d\n", IS_NORMTERM(res));
         printf("EXITSTATUS %d\n", EXITSTATUS(res));
         printf("IS_NONBLOCK %d\n", IS_NONBLOCK(res));
+        sleep (1);
     }
+    while ( 1 ) ;
 
 
     return 0;

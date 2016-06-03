@@ -24,41 +24,54 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <runcmd.h>
+#include <fcntl.h>
 #include "debug.h"
 
+/*
+TODO: use insque and remque in <search.h> 
+ */
 
 /*list of callback functions for nonblocking executions of runcmd*/
 typedef struct nonblocking_callback_t {
-    pid_t child_pid; /*child process pid*/
-    struct nonblocking_callback_t **next; /*pointer to the next if this is set to NULL this is the last one*/
+    pid_t pid; /*child process pid*/
+    struct nonblocking_callback_t *next; /*pointer to the next if this is set to NULL this is the last one*/
     void (*runcmd_onexit) (void);
 } nonblocking_callback_t;
-
 
 nonblocking_callback_t *nonblocking_callback_list = NULL;
 
 /**/
-void _sigchld_handler (int sig) {
-    nonblocking_callback_t *ptr = nonblocking_callback_list;
+void _sigchld_handler (int sig, siginfo_t *p_info, void *vptr) {
 
+    nonblocking_callback_t *ptr = nonblocking_callback_list, *ptr_prv=NULL, *ptr_aux=NULL;
+    int status=0;
     /*we have to go thru all the children and check if it's dead*/
     /*Not working yet!*/
+
     while (ptr != NULL) {
-        printf("[pid] = %d\n", ptr->child_pid);
         /* WNOHANG returns immediately if nothing happend to the process
            waitpid returns 0 if nothing happend
-        if (waitpid (ptr->child_pid, &status, WNOHANG))
-         */
-        ptr = *(ptr->next);
-    }
-    puts("-------\n");
+           */
+        if (waitpid (ptr->pid, &status, WNOHANG)) {
+            ptr->runcmd_onexit();
+            if (ptr_prv)
+                ptr_prv->next=ptr->next;
+            else nonblocking_callback_list=ptr->next;
+            ptr_aux = ptr;
+            ptr=ptr_prv;
+            free (ptr_aux);
+        }
+        ptr_prv=ptr;
+        if (ptr) 
+            ptr = ptr->next;
+    } 
 }
 
 void register_child_callback (pid_t pid) {
     nonblocking_callback_t *new_head = malloc (sizeof (nonblocking_callback_t));
     new_head->runcmd_onexit = runcmd_onexit;
-    new_head->next = &nonblocking_callback_list;
-    new_head->child_pid = pid;
+    new_head->next = nonblocking_callback_list;
+    new_head->pid = pid;
     nonblocking_callback_list = new_head;
 }
 
@@ -76,8 +89,9 @@ int runcmd (const char *command, int *result, const int *io) {
     tmp_result=0;
 
     pipers = pipe(pipefd);
-
     sysfail (pipers==-1, -1);
+
+    /*close pipe on exec*/
 
     pid = fork();
     sysfail (pid<0, -1);
@@ -89,35 +103,41 @@ int runcmd (const char *command, int *result, const int *io) {
 
         /*checks if '&' is present in the string command*/
         pch = memchr(command, RCMD_NONBLOCK, strlen(command));
-
-        /*if a '&' is found it is a non-blocking one.*/
         tmp_result |= pch!=NULL ? NONBLOCK : 0;
 
         if (IS_NONBLOCK(tmp_result)) {
             struct sigaction act;
+            memset (&act, 0, sizeof act);
             act.sa_flags = SA_SIGINFO;
-            sigemptyset (&act.sa_mask);
-            act.sa_handler = &_sigchld_handler;
+            act.sa_sigaction = _sigchld_handler; 
+
+            /*register a callback for the child with the current runcmd_onexit as callback function*/
+            register_child_callback (pid);
 
             /*assign void _sig_handler(int) to SIGCHLD*/
-            sigaction(SIGCHLD, &act, NULL);
+            sysfail (sigaction(SIGCHLD, &act, NULL)<0, -1);
         }
-        else
+        else {
             aux = wait(&status); 
 
-        sysfail (aux<0, -1);
-        if (WIFEXITED(status)) {
+            sysfail (aux<0, -1);
+            if (WIFEXITED(status)) {
 
-            tmp_result |= NORMTERM | WEXITSTATUS(status);
+                tmp_result |= NORMTERM | WEXITSTATUS(status);
 
-            /*this means that the child didn't write something in it, which only happens if exec fails*/
-            tmp_result |= !read(pipefd[0], &aux, 1) ? EXECOK: 0;
+                /*this means that the child didn't write something in it, which only happens if exec fails*/
+                tmp_result |= !read(pipefd[0], &aux, 1) ? EXECOK: 0; 
+            }
         }
     } 
     else { /*child*/
         char *args[RCMD_MAXARGS], *token;
         cmd = malloc(sizeof(char) * (strlen(command)+1));
-        close(pipefd[0]); /*close the unused pipe end*/
+        close (pipefd[0]); /*close the unused pipe end*/
+
+        aux = fcntl (pipefd[1], FD_CLOEXEC, 1);
+        sysfail (aux==-1, -1);
+
         strcpy(cmd, command);
 
         /*parse the comand given*/
@@ -131,15 +151,12 @@ int runcmd (const char *command, int *result, const int *io) {
         /*now we have to make the file descriptors in *io to be the new stdin,stdout,stderr*/
         if (io) {
             int duprs=0;
-            if (io[STDIN_FILENO] > 0)
-                duprs = dup2(io[STDIN_FILENO], STDIN_FILENO);
-            sysfail (duprs<0, -1);
-            if (io[STDOUT_FILENO] > 0)
-                duprs = dup2(io[STDOUT_FILENO], STDOUT_FILENO);
-            sysfail (duprs<0, -1);
-            if (io[STDERR_FILENO] > 0)
-                duprs = dup2(io[STDERR_FILENO], STDERR_FILENO);
-            sysfail (duprs<0, -1);
+            int std_fd[]={STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO};
+            for (i = 0;i < 3;i++) {
+                if (io[std_fd[i]] > 0)
+                    duprs = dup2(io[std_fd[i]], std_fd[i]);
+                sysfail (duprs<0, -1);
+            }
         }
         /*end of redirection of IO*/
 
