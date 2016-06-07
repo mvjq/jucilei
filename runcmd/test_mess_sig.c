@@ -51,8 +51,8 @@ int main(int argc, char **argv) {
     struct sigaction act;
 
     const char *cmd1[] = 
-    {"sleep 5 &",
-    "sleep 4 &",
+    {"sleep 1 &",
+    "sleep 1 &",
     "sleep 3 &",
     "sleep 2 &",
     "sleep 1 &" };
@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
         printf("IS_NONBLOCK %d\n", IS_NONBLOCK(res));
         sleep (1);
     }
-    sleep (2);
+    sleep (3);
 
 
     sigaction (SIGCHLD, NULL, &act);

@@ -97,3 +97,4 @@ clean:
 	rm -f *.d *.o *.a *.so $(bin)
 	rm -f $(PROJECT).tgz
 	rm -f test
+	rm -f test_mess_sig

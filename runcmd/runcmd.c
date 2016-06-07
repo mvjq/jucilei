@@ -40,6 +40,10 @@ typedef struct nonblocking_callback_t {
 
 nonblocking_callback_t *nonblocking_callback_list = NULL;
 
+
+/*
+old_handler stores the handler function that was set before we start executing 
+ */
 void (*old_handler) (int) = NULL; 
 
 /**/
@@ -48,8 +52,8 @@ void _sigchld_handler (int sig, siginfo_t *p_info, void *vptr) {
     nonblocking_callback_t *ptr = nonblocking_callback_list, *ptr_prv=NULL, *ptr_aux=NULL;
     int status=0;
     /*we have to go thru all the children and check if it's dead*/
-    /*Not working yet!*/
 
+    /*This is VERY UGLY!!!*/
     while (ptr != NULL) {
         /* WNOHANG returns immediately if nothing happend to the process
            waitpid returns 0 if nothing happend
@@ -67,13 +71,13 @@ void _sigchld_handler (int sig, siginfo_t *p_info, void *vptr) {
         ptr = (ptr) ? ptr->next : NULL;
     } 
 
-    if (!ptr && old_handler != NULL) {
+    /*we enter here if there none children left, so we set the handler back to what it was*/
+    if (nonblocking_callback_list==NULL) {
         struct sigaction act;
         memset (&act, 0, sizeof act);
         act.sa_handler = old_handler; 
         sigaction (SIGCHLD, &act, NULL);
     }
-
 }
 
 void register_child_callback (pid_t pid) {
@@ -83,7 +87,6 @@ void register_child_callback (pid_t pid) {
     new_head->pid = pid;
     nonblocking_callback_list = new_head;
 }
-
 
 /*
 if runcmd returns -1, it could be pipe error, fork error, or wait for child process error
@@ -118,7 +121,9 @@ int runcmd (const char *command, int *result, const int *io) {
             struct sigaction act, oact;
             sigaction (SIGCHLD, NULL, &oact);
 
-            old_handler = oact.sa_handler;
+            if (oact.sa_sigaction != _sigchld_handler) {
+                old_handler = oact.sa_handler;
+            }
 
             memset (&act, 0, sizeof act);
             act.sa_flags = SA_SIGINFO;
