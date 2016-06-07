@@ -91,8 +91,6 @@ int runcmd (const char *command, int *result, const int *io) {
     pipers = pipe(pipefd);
     sysfail (pipers==-1, -1);
 
-    /*close pipe on exec*/
-
     pid = fork();
     sysfail (pid<0, -1);
 
@@ -129,16 +127,17 @@ int runcmd (const char *command, int *result, const int *io) {
                 tmp_result |= !read(pipefd[0], &aux, 1) ? EXECOK: 0; 
             }
         }
+        close (pipefd[0]);
     } 
     else { /*child*/
         char *args[RCMD_MAXARGS], *token;
         cmd = malloc(sizeof(char) * (strlen(command)+1));
+        strcpy(cmd, command);
+
         close (pipefd[0]); /*close the unused pipe end*/
 
-        aux = fcntl (pipefd[1], FD_CLOEXEC, 1);
+        aux = fcntl (pipefd[1], F_SETFD, 1);
         sysfail (aux==-1, -1);
-
-        strcpy(cmd, command);
 
         /*parse the comand given*/
         token = strtok(cmd, RCMD_DELIM);
@@ -150,12 +149,12 @@ int runcmd (const char *command, int *result, const int *io) {
 
         /*now we have to make the file descriptors in *io to be the new stdin,stdout,stderr*/
         if (io) {
-            int duprs=0;
             int std_fd[]={STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO};
             for (i = 0;i < 3;i++) {
-                if (io[std_fd[i]] > 0)
-                    duprs = dup2(io[std_fd[i]], std_fd[i]);
-                sysfail (duprs<0, -1);
+                if (io[std_fd[i]] > 0) {
+                    aux = dup2(io[std_fd[i]], std_fd[i]);
+                    sysfail (aux<0, -1);
+                }
             }
         }
         /*end of redirection of IO*/
@@ -163,19 +162,14 @@ int runcmd (const char *command, int *result, const int *io) {
         execvp(args[0], args);
 
         /*if we got here, it means args[0] can't be executed :(*/
-        /*I'm using pipe to send a message to the caller, this is to the parent can differ this case from when
-          the child actually returns EXECFAILSTATUS (127)*/
         write (pipefd[1], "1", 1);
         close (pipefd[1]);
-
         free (cmd);
-
         exit (EXECFAILSTATUS);
     }
 
     if (result)
         *result=tmp_result;
-    close (pipefd[0]);
     return pid;
 }
 
