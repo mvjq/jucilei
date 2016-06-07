@@ -48,6 +48,10 @@ test.o: test.c debug.h
 	$(CC) -c $< $(LDFLAGS) $(LD_FLAGS) $(CPPFLAGS) $(CPP_FLAGS) -I. $(CFLAGS) $(C_FLAGS) -o $@
 test: test.o runcmd.o
 	$(CC) $^ -o $@
+test_mess_sig.o: test_mess_sig.c debug.h
+	$(CC) -c $< $(LDFLAGS) $(LD_FLAGS) $(CPPFLAGS) $(CPP_FLAGS) -I. $(CFLAGS) $(C_FLAGS) -o $@
+test_mess_sig: test_mess_sig.o runcmd.o
+	$(CC) $^ -o $@
 #just to quickly test runcmd
 
 

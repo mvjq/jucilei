@@ -40,6 +40,8 @@ typedef struct nonblocking_callback_t {
 
 nonblocking_callback_t *nonblocking_callback_list = NULL;
 
+void (*old_handler) (int) = NULL; 
+
 /**/
 void _sigchld_handler (int sig, siginfo_t *p_info, void *vptr) {
 
@@ -62,9 +64,16 @@ void _sigchld_handler (int sig, siginfo_t *p_info, void *vptr) {
             free (ptr_aux);
         }
         ptr_prv=ptr;
-        if (ptr) 
-            ptr = ptr->next;
+        ptr = (ptr) ? ptr->next : NULL;
     } 
+
+    if (!ptr && old_handler != NULL) {
+        struct sigaction act;
+        memset (&act, 0, sizeof act);
+        act.sa_handler = old_handler; 
+        sigaction (SIGCHLD, &act, NULL);
+    }
+
 }
 
 void register_child_callback (pid_t pid) {
@@ -86,6 +95,7 @@ int runcmd (const char *command, int *result, const int *io) {
     char *cmd;
     pid_t pid;
 
+
     tmp_result=0;
 
     pipers = pipe(pipefd);
@@ -104,7 +114,12 @@ int runcmd (const char *command, int *result, const int *io) {
         tmp_result |= pch!=NULL ? NONBLOCK : 0;
 
         if (IS_NONBLOCK(tmp_result)) {
-            struct sigaction act;
+
+            struct sigaction act, oact;
+            sigaction (SIGCHLD, NULL, &oact);
+
+            old_handler = oact.sa_handler;
+
             memset (&act, 0, sizeof act);
             act.sa_flags = SA_SIGINFO;
             act.sa_sigaction = _sigchld_handler; 
@@ -136,7 +151,7 @@ int runcmd (const char *command, int *result, const int *io) {
 
         close (pipefd[0]); /*close the unused pipe end*/
 
-        aux = fcntl (pipefd[1], F_SETFD, 1);
+        aux = fcntl (pipefd[1], F_SETFD, FD_CLOEXEC); /*set close on exec flag*/
         sysfail (aux==-1, -1);
 
         /*parse the comand given*/
