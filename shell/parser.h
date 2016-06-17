@@ -6,7 +6,10 @@
 #define PIPE_STR "|"
 #define PIPE_CHAR '|'
 #define INPUT_REDIR_CHAR '<'
-#define OUTPUT_REDIR_CHAR '<'
+#define OUTPUT_REDIR_CHAR '>'
+
+#define SYNTAX_ERROR (1<<1)
+#define IS_SYNTAX_ERROR(x) (((x) & SYNTAX_ERROR) && 1)
 
 
 struct qelem {
@@ -18,8 +21,7 @@ struct qelem {
 typedef struct cmd_line_t {
     char *io[3]; /*standard is {NULL,NULL,NULL}..., meaning no redirection*/
     int is_nonblock;
-    struct qelem *pipe_list_tail; /*note that if there's no pipe this is a one element list, check <search.h> to see struct qelem */
-    size_t pipe_list_size; /*number of commands executed with pipes*/
+    struct qelem *pipe_list_tail, *pipe_list_head; /*note that if there's no pipe this is a one element list, check <search.h> to see struct qelem */
 } cmd_line_t;
 
 

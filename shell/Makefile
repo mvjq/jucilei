@@ -23,7 +23,7 @@
 
 include config.mk
 
-parser: parser.h parser.o
-	$(CC) $(CFLAGS) $(C_FLAGS) parser.o -o parser -g
+#parser: parser.h parser.o
+#	$(CC) $(CFLAGS) $(C_FLAGS) parser.o -o parser -g
 parser.o: parser.c
-	$(CC) -c $(CFLAGS) parser.c -o parser.o -g
+	$(CC) -c $(CFLAGS) parser.c -o parser.o

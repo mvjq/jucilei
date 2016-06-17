@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <ctype.h>
 #include "parser.h"
 #include "debug.h"
 
@@ -16,8 +17,8 @@ cmd_line_t* new_cmd_line (void) {
     cmd_line_t *cmd = malloc (sizeof (cmd_line_t));
     sysfail (cmd==NULL, NULL);
     cmd->io[0] = cmd->io[1] = cmd->io[2] = NULL;
+    cmd->pipe_list_head = NULL;
     cmd->pipe_list_tail = NULL;
-    cmd->pipe_list_size = 0;
     cmd->is_nonblock = 0;
     return cmd;
 }
@@ -28,20 +29,22 @@ cmd_line_t* new_cmd_line (void) {
     also trims the string
  */
 char *stringndup(const char *str, size_t n) {
-    char *rstr = malloc (sizeof (char) * n);
-    int poff=0;
+    char *rstr;
+    int poff=0; /*offset, how many bytes are blank at the begining*/
 
     /*triming*/
-    while (cmd_str[poff] != '\0' && (iscntrl (cmd_str[poff]) || isblank (cmd_str[poff])))
+    while (str[poff] != '\0' && (iscntrl (str[poff]) || isblank (str[poff])))
         poff++;
     n -= poff;
-    while (n>0 && iscntrl (cmd_str[poff + n-1]) || isblank (cmd_str[poff + n - 1]))
+    while (n>0 && iscntrl (str[poff + n-1]) || isblank (str[poff + n - 1]))
         --n;
     /*end triming*/
 
+    rstr = malloc (sizeof (char) * n);
     sysfail (rstr==NULL, NULL);
+
     rstr[n] = '\0';
-    strncpy (rstr, str, n);
+    strncpy (rstr, str + poff, n);
     return rstr;
 }
 
@@ -66,6 +69,8 @@ int pipe_list_add_cmd (cmd_line_t *cmd_line, const char *cmd_str, size_t n) {
     sysfail (nelem==NULL, -1);
     insque (nelem, cmd_line->pipe_list_tail);
     cmd_line->pipe_list_tail = nelem;
+    if (cmd_line->pipe_list_head == NULL)
+        cmd_line->pipe_list_head = cmd_line->pipe_list_tail;
     return EXIT_SUCCESS;
 }
 
@@ -73,7 +78,7 @@ int pipe_list_add_cmd (cmd_line_t *cmd_line, const char *cmd_str, size_t n) {
 /*
 returns:
 0 in case of succes 
-1 in ..
+1 in ... (still not in use)
 2 in syntax error
 -1 in unexpected error
  */
@@ -98,23 +103,21 @@ int parse_cmd_line (cmd_line_t *cmd_line, const char *cmd) {
             prv_cmd_beg = i + 1;
         }
     }
+
+    /*last command (the one that comes after the last pipe)*/
     if (prv_cmd_beg < cmd_len) {
         raux = pipe_list_add_cmd (cmd_line, cmd + prv_cmd_beg, i-prv_cmd_beg);
         sysfail (raux<0, -1);
         prv_cmd_beg = i + 1;
     }
+
     for (;i < cmd_len && !IS_NONBLOCK(cmd[i]); ++i) {
         /*todo: recognize output redir*/
-        if (IS_INPUT_REDIR (cmd[i])) {
+        if (IS_IO_REDIR (cmd[i])) { 
             if (io_redir_seen != -1)
                 cmd_line->io[io_redir_seen] = stringndup (cmd + prv_cmd_beg, i-prv_cmd_beg);
             prv_cmd_beg = i + 1;
-            io_redir_seen = 0;
-        }
-        else if (IS_OUTPUT_REDIR (cmd[i])) {
-            if (io_redir_seen != -1)
-                cmd_line->io[io_redir_seen] = stringndup (cmd + prv_cmd_beg, i-prv_cmd_beg);
-            io_redir_seen = 1;
+            io_redir_seen = (IS_INPUT_REDIR (cmd[i])) ? 0 : 1;
         }
         else if (IS_PIPE (cmd[i]))
                 ret |= 2;
@@ -124,54 +127,76 @@ int parse_cmd_line (cmd_line_t *cmd_line, const char *cmd) {
 
     /*if it is non_block it must be the last thing*/
     cmd_line->is_nonblock = i < cmd_len && IS_NONBLOCK (cmd[i]);
+
+    if (i < cmd_len-1)
+        ret |= SYNTAX_ERROR;
     
     return ret;
 } 
 
-void print (cmd_line_t *cmd_line) {
-    int c = 0;
-    struct qelem *ptr = cmd_line->pipe_list_tail;
-    printf("IS_NONBLOCK %d\n", cmd_line->is_nonblock);
-
-    if (cmd_line->io[0] != NULL)
-        printf("INPUT %s\n", cmd_line->io[0]);
-    if (cmd_line->io[1] != NULL)
-        printf("OUTPUT %s\n", cmd_line->io[1]);
-
-    printf("IS_NONBLOCK %d\n", cmd_line->is_nonblock);
-    while (ptr != NULL) {
-        printf("%d: %s *\n", ++c, ptr->q_data);
-
-        ptr = ptr->q_back;
-    }
-    puts("------\n");
-}
-
+/*  DO NOT forget to call this function, after you're done parsing,
+    otherwise you'll get memory leak!!*/
 void release_cmd_line (cmd_line_t *cmd_line) {
-    if (cmd_line != NULL)
-        free (cmd_line);
+    /**/
+    struct qelem *ptr, *aux = NULL;
+    size_t i;
+
+    if (cmd_line == NULL)
+        return ;
+
+    for (ptr = cmd_line->pipe_list_tail; ptr != NULL; ) {
+        free (ptr->q_data);
+        aux = ptr->q_back;
+        remque (ptr);
+        free (ptr);
+        ptr = aux;
+    }
+
+    for (i=0; i<3; ++i)
+        if (cmd_line->io[i] != NULL)
+            free (cmd_line->io[i]);
+    free (cmd_line);
 }
 
 
 /*
 test parser 
  */
+
+/*
+void print (cmd_line_t *cmd_line) {
+    int c = 0;
+    struct qelem *ptr = cmd_line->pipe_list_head;
+
+    printf("INPUT %s\n", (cmd_line->io[0]==NULL) ? "STDIN" : cmd_line->io[0]);
+    printf("OUTPUT %s\n", (cmd_line->io[1]==NULL) ? "STDOUT" :cmd_line->io[1]);
+    printf("IS_NONBLOCK %d\n", cmd_line->is_nonblock);
+
+    while (ptr != NULL) {
+        printf("%d: %s\n", ++c, ptr->q_data);
+        ptr = ptr->q_forw;
+    }
+    puts("------");
+}
+
+
+
 int main(void) {
     int raux;
-    cmd_line_t *cmd_line = new_cmd_line();
+    cmd_line_t *cmd_line = NULL;
 
     char cmd[555];
     while (fgets (cmd, 554, stdin) != NULL ) {
+        cmd_line = new_cmd_line ();
         raux = parse_cmd_line (cmd_line, cmd);
-        if (raux & 2)
+        if (IS_SYNTAX_ERROR (raux))
             puts ("Syntax Error!");
         else
             print (cmd_line);
+        release_cmd_line (cmd_line);
 
     }
 
-
-
-
     return 0;
 }
+*/
