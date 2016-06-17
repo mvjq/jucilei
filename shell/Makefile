@@ -27,3 +27,8 @@ include config.mk
 #	$(CC) $(CFLAGS) $(C_FLAGS) parser.o -o parser -g
 parser.o: parser.c
 	$(CC) -c $(CFLAGS) parser.c -o parser.o
+
+.PONHY: clean
+
+clean:
+	rm -f parser.o

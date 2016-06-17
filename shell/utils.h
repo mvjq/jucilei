@@ -30,22 +30,6 @@
 #define __func__ ""
 #endif
 
-#define DEFAULT_ERR "Something wrong"
-
-/* 
- *  Custom errors (uses custom messages).
- */
-
-/* Report an error and exit. */
-
-#define fatal(expression, message)					\
-  do { if ((expression)) {fprintf (stderr, "%s: %d: %s: %s\n",\
-    __FILE__, __LINE__, __func__, message); \
-      exit (EXIT_FAILURE);}} while (0)
-
-
-/* Report an error and returns with the the specified value. */
-
 #ifdef POSIXEG_DEBUG
 
 /* Verbose mode. */
@@ -63,7 +47,6 @@
 #endif	/* POSIXEG_DEBUG */
 
 /* Report an error. */
-
 #define debug(expression, message) 	\
   do { if (expression) {fprintf (stderr, "%s: %d: %s: %s\n",	\
     __FILE__, __LINE__, __func__, message); \
@@ -87,39 +70,5 @@
 
 #define sysdebug(expression) \
        debug(expression, strerror(errno))
-
-
-
-/* #define sysfatal(expression) \ */
-/*   do { if ((expression)) {fprintf (stderr, "%s: %d: %s: %s\n",\ */
-/*     __FILE__, __LINE__, __func__, strerror (errno)); \ */
-/*       exit (EXIT_FAILURE);}} while (0) */
-
-
-/* /\* Report a system error and returns wi the the specified code. *\/ */
-
-/* #ifdef POSIXEG_DEBUG */
-
-/* #define sysfail(expression, return_status)\ */
-/*   do { if (expression) {fprintf (stderr, "%s: %d: %s: %s\n",\ */
-/*     __FILE__, __LINE__, __func__, strerror (errno)); \ */
-/*       return (return_status);}} while (0) */
-
-/* #else */
-
-/* #define sysfail(expression, return_status)\ */
-/*   do { if (expression) { return (return_status);}} while (0) */
-
-/* #endif	/\* POSIXEG_DEBUG *\/ */
-
-/* /\* Report a system error. *\/ */
-
-/* #define sysdebug(expression)						\ */
-/*   do { if (expression) {fprintf (stderr, "%s: %d: %s: %s\n",	\ */
-/*     __FILE__, __LINE__, __func__, strerror (errno)); \ */
-/*     }} while (0) */
-
-
-
 
 #endif/* DEBUG_H */

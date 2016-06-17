@@ -5,7 +5,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "parser.h"
-#include "debug.h"
+#include "utils.h"
 
 #define IS_NONBLOCK(x) ((x)==NONBLOCK_CHAR)
 #define IS_INPUT_REDIR(x) ((x)==INPUT_REDIR_CHAR)
@@ -164,6 +164,7 @@ test parser
  */
 
 /*
+
 void print (cmd_line_t *cmd_line) {
     int c = 0;
     struct qelem *ptr = cmd_line->pipe_list_head;
