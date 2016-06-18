@@ -1,9 +1,9 @@
-#include <search.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <ctype.h>
+#include <search.h>
 #include "parser.h"
 #include "utils.h"
 
@@ -36,7 +36,7 @@ char *stringndup(const char *str, size_t n) {
     while (str[poff] != '\0' && (iscntrl (str[poff]) || isblank (str[poff])))
         poff++;
     n -= poff;
-    while (n>0 && iscntrl (str[poff + n-1]) || isblank (str[poff + n - 1]))
+    while (n>0 && (iscntrl (str[poff + n-1]) || isblank (str[poff + n - 1])))
         --n;
     /*end triming*/
 
@@ -64,7 +64,6 @@ struct qelem *new_qelem (const char *cmd_str, size_t n) {
 returns -1 in case of error 
  */
 int pipe_list_add_cmd (cmd_line_t *cmd_line, const char *cmd_str, size_t n) {
-    int i;
     struct qelem *nelem = new_qelem (cmd_str, n); 
     sysfail (nelem==NULL, -1);
     insque (nelem, cmd_line->pipe_list_tail);

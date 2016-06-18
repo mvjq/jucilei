@@ -24,11 +24,20 @@
 include config.mk
 
 #parser: parser.h parser.o
-#	$(CC) $(CFLAGS) $(C_FLAGS) parser.o -o parser -g
+#	$(CC) $(CPP_FLAGS) $(CFLAGS) $(C_FLAGS) parser.o -o parser -g
 parser.o: parser.c
-	$(CC) -c $(CFLAGS) parser.c -o parser.o
+	$(CC) $(CPP_FLAGS) -c $(C_FLAGS) parser.c -o parser.o
+
+runcmd.o: parser.o runcmd.c
+	$(CC) $(CPP_FLAGS) -c $(C_FLAGS) runcmd.c -o runcmd.o
+
+main: parser.o runcmd.o
+	$(CC) $(CPP_FLAGS) $(C_FLAGS) parser.o runcmd.o main.c -o main
+
 
 .PONHY: clean
 
 clean:
 	rm -f parser.o
+	rm -f main
+	rm -f runcmd.o

@@ -1,6 +1,6 @@
 #ifndef PARSER_H
 #define PARSER_H
-#include <search.h>
+#include "utils.h"
 
 #define NONBLOCK_CHAR '&'
 #define PIPE_STR "|"
@@ -11,12 +11,6 @@
 #define SYNTAX_ERROR (1<<1)
 #define IS_SYNTAX_ERROR(x) (((x) & SYNTAX_ERROR) && 1)
 
-
-struct qelem {
-    struct qelem *q_forw;
-    struct qelem *q_back;
-    char *q_data;
-};
 
 typedef struct cmd_line_t {
     char *io[3]; /*standard is {NULL,NULL,NULL}..., meaning no redirection*/

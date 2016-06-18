@@ -26,9 +26,17 @@
 #include <string.h>
 #include <errno.h>
 
+
 #ifndef __func__      /* __func__ not avaible prior to c99 */
 #define __func__ ""
 #endif
+
+/*this for list use, used in parser.c mostly*/
+struct qelem {
+    struct qelem *q_forw;
+    struct qelem *q_back;
+    char *q_data;
+};
 
 #ifdef POSIXEG_DEBUG
 
