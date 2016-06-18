@@ -18,16 +18,30 @@
 
  */
 
-#ifndef RUNCMD_H
-#define RUNCMD_H
+#ifndef PROC_H
+#define PROC_H
 
-#define RUNCMD_DELIM " \n\t\r"
-#define RUNCMD_MAXARGS 256
+#define CMD_DELIM " \n\t\r"
+#define CMD_MAXARGS 256
 
-#define RUNCMD_FAILURE 0
+#define RUN_PROC_FAILURE 0
 /*
 returns the pid of the child
 (input,output,error)_redir are file descriptors
  */
-pid_t runcmd (const char *cmd, int input_redir, int output_redir, int error_redir);
+
+typedef struct {
+    pid_t pid;
+    char *argv[CMD_MAXARGS];
+    char completed;
+    char stopped;
+    int status;
+} process_t;
+
+/*creates a new process from a command string*/
+process_t *new_process (const char *cmd) ;
+
+void release_process (process_t *proc);
+
+pid_t run_process (const process_t *proc, int input_redir, int output_redir, int error_redir);
 #endif

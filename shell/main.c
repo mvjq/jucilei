@@ -23,17 +23,20 @@
 #include <string.h>
 #include <unistd.h>
 #include "parser.h"
-#include "runcmd.h"
+#include "process.h"
 
 
 int main (int argc, char *argv[]) {
 
     char cmd[256];
+    process_t *proc = NULL;
 
     while (fgets (cmd, 256, stdin) != NULL) {
         if (cmd[strlen (cmd)-1] == '\n')
             cmd[strlen (cmd)-1] = '\0'; 
-        printf ("%d\n", runcmd(cmd, STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO));
+        proc = new_process (cmd);
+        printf ("%d\n", run_process(proc, STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO));
+        release_process (proc);
     }
 
 

@@ -25,11 +25,38 @@
 #include <signal.h>
 #include <fcntl.h>
 #include "utils.h"
-#include "runcmd.h"
+#include "process.h"
 
 
-pid_t runcmd (const char *command, int input_redir, int output_redir, int error_redir) {
-    int aux;
+process_t* new_process (const char *command) {
+    size_t i;
+    char *token, *cmd;   
+    process_t *rprocess;
+
+    cmd = malloc (sizeof (char) * (strlen (command)+1));
+    rprocess = malloc (sizeof (process_t));
+    rprocess->completed = 0;
+    rprocess->stopped = 0;
+    rprocess->status = 0;
+    strcpy (cmd, command);
+
+    token = strtok (cmd, CMD_DELIM);
+    for (i=0; i<CMD_MAXARGS && token != NULL; ++i) {
+        rprocess->argv[i]=token;
+        token = strtok (NULL, CMD_DELIM);
+    }
+    rprocess->argv[i] = NULL;
+    return rprocess;
+}
+
+void release_process (process_t *proc) {
+    /*as we used strtok to build this string we just need 1 free*/
+    if (proc->argv[0] != NULL)
+        free (proc->argv[0]);
+    free (proc);
+}
+
+pid_t run_process (const process_t *proc, int input_redir, int output_redir, int error_redir) {
     pid_t pid;
     pid = fork();
 
@@ -37,33 +64,17 @@ pid_t runcmd (const char *command, int input_redir, int output_redir, int error_
     sysfail (pid < 0, -1);
 
     if (pid == 0) { /*child*/
-        size_t i;
-        char *args[RUNCMD_MAXARGS], *token, *cmd;   
-        cmd = malloc (sizeof (char) * (strlen (command)+1));
-        strcpy (cmd, command);
-        token = strtok (cmd, RUNCMD_DELIM);
-        for (i=0; i<RUNCMD_MAXARGS && token != NULL; ++i) {
-            args[i]=token;
-            token = strtok (NULL, RUNCMD_DELIM);
-        }
-        args[i] = NULL;
         /*io redirection*/
         if (input_redir != STDIN_FILENO)
-            if (dup2 (input_redir, STDIN_FILENO)<0)
-                goto error_release;
+            sysfail (dup2 (input_redir, STDIN_FILENO)<0, RUN_PROC_FAILURE);
         if (output_redir != STDOUT_FILENO)
-            if (dup2 (input_redir, STDOUT_FILENO)<0)
-                goto error_release;
+            sysfail (dup2 (input_redir, STDOUT_FILENO)<0, RUN_PROC_FAILURE);
         if (error_redir != STDERR_FILENO)
-            if (dup2 (input_redir, STDERR_FILENO)<0)
-                goto error_release;
+            sysfail (dup2 (input_redir, STDERR_FILENO)<0, RUN_PROC_FAILURE);
 
-        execvp (args[0], args);
-                        
-        error_release:
-        free (cmd);
-        return RUNCMD_FAILURE;
+        execvp (proc->argv[0], proc->argv);
+        /*if we reached here something wronog happend with exec*/
+        return RUN_PROC_FAILURE;
     }
     return pid;
-
 }

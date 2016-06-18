@@ -28,12 +28,11 @@ include config.mk
 parser.o: parser.c
 	$(CC) $(CPP_FLAGS) -c $(C_FLAGS) parser.c -o parser.o
 
-runcmd.o: parser.o runcmd.c
-	$(CC) $(CPP_FLAGS) -c $(C_FLAGS) runcmd.c -o runcmd.o
+process.o: process.c
+	$(CC) $(CPP_FLAGS) -c $(C_FLAGS) process.c -o process.o
 
-main: parser.o runcmd.o
-	$(CC) $(CPP_FLAGS) $(C_FLAGS) parser.o runcmd.o main.c -o main
-
+main: parser.o process.o main.c
+	$(CC) $(CPP_FLAGS) $(C_FLAGS) parser.o process.o main.c -o main
 
 .PONHY: clean
 
