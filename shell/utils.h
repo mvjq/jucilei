@@ -37,6 +37,7 @@ struct qelem {
     struct qelem *q_back;
     char *q_data;
 };
+typedef struct qelem qelem;
 
 #ifdef POSIXEG_DEBUG
 

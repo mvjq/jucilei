@@ -31,12 +31,16 @@ parser.o: parser.c
 process.o: process.c
 	$(CC) $(CPP_FLAGS) -c $(C_FLAGS) process.c -o process.o
 
-main: parser.o process.o main.c
-	$(CC) $(CPP_FLAGS) $(C_FLAGS) parser.o process.o main.c -o main
+job.o: job.c
+	$(CC) $(CPP_FLAGS) -c $(C_FLAGS) job.c -o job.o
+
+main: parser.o process.o main.c job.o
+	$(CC) $(CPP_FLAGS) $(C_FLAGS) parser.o job.o process.o main.c -o main
 
 .PONHY: clean
 
 clean:
 	rm -f parser.o
 	rm -f main
-	rm -f runcmd.o
+	rm -f process.o
+	rm -f job.o
