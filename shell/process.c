@@ -56,12 +56,13 @@ void release_process (process_t *proc) {
     free (proc);
 }
 
-pid_t run_process (const process_t *proc, int input_redir, int output_redir, int error_redir) {
+pid_t run_process (process_t *proc, int input_redir, int output_redir, int error_redir) {
     pid_t pid;
     pid = fork();
 
     /*returns -1 if fork failed*/
     sysfail (pid < 0, -1);
+    proc->pid = pid;
 
     if (pid == 0) { /*child*/
         /*io redirection*/

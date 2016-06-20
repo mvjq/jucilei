@@ -46,4 +46,10 @@ returns 1 if every process finished, 0 otherwise
  */
 char job_completed (job_t *job);
 
+
+/*
+runs every process in the pipeline 
+ */
+int run_job (job_t *job);
+
 #endif

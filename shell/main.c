@@ -51,8 +51,8 @@ int main (int argc, char *argv[]) {
             ret = job_add_process (job, proc);
         }
 
-        ptr = job->process_list_head;
-        for (;ptr != NULL; ptr=ptr->q_forw) {
+        /*running */
+        for (ptr = job->process_list_head;ptr != NULL; ptr=ptr->q_forw) {
             printf ("%s\n", ((process_t*) ptr->q_data)->argv[0]);
         }
         /*printf ("%d\n", run_process(proc, STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO)); */

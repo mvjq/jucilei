@@ -43,5 +43,9 @@ process_t *new_process (const char *cmd) ;
 
 void release_process (process_t *proc);
 
-pid_t run_process (const process_t *proc, int input_redir, int output_redir, int error_redir);
+/*
+this function alters the pid attribute in proc 
+ */
+pid_t run_process (process_t *proc, int input_redir, int output_redir, int error_redir);
+
 #endif

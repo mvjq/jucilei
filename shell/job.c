@@ -83,9 +83,44 @@ char job_completed (job_t *job) {
     char has = 1;
 
     /*checks if evry procces is completed*/
-    for (;ptr != NULL; ptr=ptr->q_forw)
+    for (;ptr != NULL; ptr = ptr->q_forw)
         has &= ((process_t *)ptr->q_data)->completed == 1;
     return has;
+}
+
+/*
+the caller is in charge of waiting for the processes created! 
+ */
+int run_job (job_t *job) {
+    qelem *ptr;
+    process_t *proc;
+    pid_t pid, pgid = 0;
+    int input_redir, output_redir, error_redir;
+    if (job == NULL)
+        return -1;
+    input_redir = job->io[0];
+    error_redir = job->io[2];
+
+    /*
+       not sure if this rly works :)
+     */
+    for (;ptr != NULL; ptr = ptr->q_forw) {
+        int pipefd[2];
+        if (ptr->q_forw != NULL) {
+            sysfail (pipe (pipefd)<0, -1);
+            output_redir = pipefd[1];
+        }
+        proc = (process_t *)ptr->q_data;
+        pid = run_process (proc, input_redir, output_redir, error_redir);
+        pgid = (!pgid) ? pid : pgid;
+
+        /*putting everyone in the same process group*/
+        setpgid (pid, pgid);
+
+        input_redir = pipefd[0];
+    }
+    job->pgid = pgid;
+    return EXIT_SUCCESS;
 }
 
 
