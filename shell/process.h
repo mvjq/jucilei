@@ -1,4 +1,4 @@
-/*  runcmd.c - source code of jucilei
+/*  process.h - source code of jucilei
     Copyright (c) Danilo Tedeschi 2016  <danfyty@gmail.com>
 
     This file is part of Jucilei.

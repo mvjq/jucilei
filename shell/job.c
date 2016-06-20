@@ -1,4 +1,4 @@
-/*  process.c - source code of jucilei
+/*  job.c - source code of jucilei
     Copyright (c) Danilo Tedeschi 2016  <danfyty@gmail.com>
 
     This file is part of Jucilei.
@@ -95,7 +95,7 @@ int run_job (job_t *job) {
     qelem *ptr;
     process_t *proc;
     pid_t pid, pgid = 0;
-    int input_redir, output_redir, error_redir;
+    int pipefd[2], input_redir, output_redir, error_redir;
     if (job == NULL)
         return -1;
     input_redir = job->io[0];
@@ -105,7 +105,6 @@ int run_job (job_t *job) {
        not sure if this rly works :)
      */
     for (;ptr != NULL; ptr = ptr->q_forw) {
-        int pipefd[2];
         if (ptr->q_forw != NULL) {
             sysfail (pipe (pipefd)<0, -1);
             output_redir = pipefd[1];
