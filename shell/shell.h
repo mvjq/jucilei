@@ -1,4 +1,4 @@
-/*  main.c - source code of jucilei
+/*  shell.h - source code of jucilei
     Copyright (c) Danilo Tedeschi 2016  <danfyty@gmail.com>
 
     This file is part of Jucilei.
@@ -25,21 +25,15 @@
 #include "parser.h"
 #include "process.h"
 #include "job.h"
-#include "shell.h"
 
 
-int main (int argc, char *argv[]) {
+/*
+returns -1 in case of error (cmd coundn't be executed) 
+ */
+int create_job (const char *cmd);
 
-    char cmd[256];
-    int ret;
-
-    while (printf("$ "), fgets (cmd, 256, stdin) != NULL) {
-        ret = create_job (cmd);
-        if (ret==-1)
-            puts ("Syntax Error");
-    }
-
-
-
-    return EXIT_SUCCESS;
-}
+/*
+runs the current job that is in foreground mode 
+if there's none it just returns
+ */
+int run_fg_job();

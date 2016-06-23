@@ -104,7 +104,7 @@ int run_job (job_t *job) {
     /*
        not sure if this rly works :)
      */
-    for (;ptr != NULL; ptr = ptr->q_forw) {
+    for (ptr = job->process_list_head; ptr != NULL; ptr = ptr->q_forw) {
         if (ptr->q_forw != NULL) {
             sysfail (pipe (pipefd)<0, -1);
             output_redir = pipefd[1];
@@ -120,6 +120,16 @@ int run_job (job_t *job) {
     }
     job->pgid = pgid;
     return EXIT_SUCCESS;
+}
+
+void print_job (job_t *job) {
+    int i=1;
+    qelem *ptr = job->process_list_head;
+    printf( "Proc Group ID: %d\n", job->pgid);
+    while (ptr != NULL) {
+        printf ("Process [%d] PID %d\n", i++, ((process_t*)ptr->q_data)->pid);
+        ptr = ptr->q_forw;
+    }
 }
 
 

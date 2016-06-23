@@ -52,4 +52,6 @@ runs every process in the pipeline
  */
 int run_job (job_t *job);
 
+void print_job (job_t *job);
+
 #endif
