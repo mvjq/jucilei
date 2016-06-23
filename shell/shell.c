@@ -23,6 +23,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include "utils.h"
 #include "parser.h"
 #include "process.h"
@@ -37,14 +39,30 @@ qelem *job_list_head, *job_list_tail;
 job_t *fg_job = NULL;
 
 void _sigchld_handler (int signum) {
-    /*puts("ASD");*/
+    qelem *p, *q;
+    process_t *proc;
+    char completed_all = 1;
+
     if (fg_job) {
+        for (p = fg_job->process_list_head; p != NULL; p = p->q_forw) {
+            
+            proc = (process_t*) p->q_data;
+            if (proc->completed)
+                continue;
+            if (waitpid (proc->pid, &proc->status, WNOHANG))
+                proc->completed = 1;
+            else 
+                completed_all = 0;
+        }
+        if (completed_all) {
+            fg_job = NULL;
+        }
     }
 }
 
 int run_fg_job() {
     while (fg_job != NULL)
-        while (pause());
+        pause();
     return EXIT_SUCCESS;
 }
 
