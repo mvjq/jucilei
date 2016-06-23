@@ -46,7 +46,7 @@ qelem* new_proc_node (process_t *proc) {
     return ptr;
 }
 
-int job_add_process (job_t *job, process_t *proc) {
+int job_push_process (job_t *job, process_t *proc) {
     qelem *ptr;
     sysfail (job==NULL, -1);
 
@@ -132,4 +132,12 @@ void print_job (job_t *job) {
     }
 }
 
+
+process_t* get_process_pid (job_t *job, pid_t pid) {
+    qelem *ptr = job->process_list_head;
+    for (;ptr != NULL; ptr = ptr->q_forw)
+        if (((process_t*)ptr->q_data)->pid == pid)
+            return (process_t*) ptr->q_data;
+    return NULL;
+}
 

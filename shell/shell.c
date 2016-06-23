@@ -37,6 +37,7 @@ qelem *job_list_head, *job_list_tail;
 job_t *fg_job = NULL;
 
 void _sigchld_handler (int signum) {
+    /*puts("ASD");*/
     if (fg_job) {
     }
 }
@@ -85,7 +86,7 @@ int create_job (const char *cmd) {
 
     for (ptr = cmd_line->pipe_list_head; ptr != NULL; ptr=ptr->q_forw) {
         proc = new_process (ptr->q_data);
-        aux = job_add_process (job, proc);
+        aux = job_push_process (job, proc);
         if (aux==-1) {
             ret = -1;
             goto release_stuff;
@@ -121,7 +122,7 @@ int create_job (const char *cmd) {
         sigaction (SIGCHLD, &act, NULL);
         
 
-    print_job (job);
+    /*print_job (job);*/
 
 
     /*printf ("%d\n", run_process(proc, STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO)); */

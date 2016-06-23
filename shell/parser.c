@@ -82,7 +82,7 @@ struct qelem *new_qelem (const char *cmd_str, size_t n) {
 /*
 returns -1 in case of error 
  */
-int pipe_list_add_cmd (cmd_line_t *cmd_line, const char *cmd_str, size_t n) {
+int pipe_list_push_cmd (cmd_line_t *cmd_line, const char *cmd_str, size_t n) {
     struct qelem *nelem = new_qelem (cmd_str, n); 
     sysfail (nelem==NULL, -1);
     insque (nelem, cmd_line->pipe_list_tail);
@@ -116,7 +116,7 @@ int parse_cmd_line (cmd_line_t *cmd_line, const char *cmd) {
     /*assuming that the last thing is io redirection or nonblocking indicator*/
     for (i=0; i < cmd_len && !IS_IO_REDIR (cmd[i]) && !IS_NONBLOCK (cmd[i]); ++i) {
         if (IS_PIPE (cmd[i])) {
-            raux = pipe_list_add_cmd (cmd_line, cmd + prv_cmd_beg, i-prv_cmd_beg);
+            raux = pipe_list_push_cmd (cmd_line, cmd + prv_cmd_beg, i-prv_cmd_beg);
             sysfail (raux<0, -1);
             prv_cmd_beg = i + 1;
         }
@@ -124,7 +124,7 @@ int parse_cmd_line (cmd_line_t *cmd_line, const char *cmd) {
 
     /*last command (the one that comes after the last pipe)*/
     if (prv_cmd_beg < cmd_len) {
-        raux = pipe_list_add_cmd (cmd_line, cmd + prv_cmd_beg, i-prv_cmd_beg);
+        raux = pipe_list_push_cmd (cmd_line, cmd + prv_cmd_beg, i-prv_cmd_beg);
         sysfail (raux<0, -1);
         prv_cmd_beg = i + 1;
     }

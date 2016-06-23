@@ -39,7 +39,7 @@ void release_job (job_t *job);
    adds process to the proccess list
 
  */
-int job_add_process (job_t *job, process_t *proc);
+int job_push_process (job_t *job, process_t *proc);
 
 /*
 returns 1 if every process finished, 0 otherwise 
@@ -52,6 +52,13 @@ runs every process in the pipeline
  */
 int run_job (job_t *job);
 
+/*
+   returns a process with the given pid
+   NULL in case it doesn't exist
+ */
+process_t* get_process_pid (job_t *job, pid_t pid);
+
 void print_job (job_t *job);
+
 
 #endif
