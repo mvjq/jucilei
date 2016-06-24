@@ -27,6 +27,7 @@
 #include "job.h"
 
 
+int shell_init (void);
 /*
 returns -1 in case of error (cmd coundn't be executed) 
  */

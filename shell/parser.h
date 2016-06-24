@@ -28,7 +28,10 @@
 #define OUTPUT_REDIR_CHAR '>'
 
 #define SYNTAX_ERROR (1<<1)
+#define EMPTY_LINE (1<<2)
 #define IS_SYNTAX_ERROR(x) (((x) & SYNTAX_ERROR) && 1)
+#define IS_EMPTY_LINE(x) (((x) & EMPTY_LINE) && 1)
+#define IS_CMD_LINE_OK(x) ((x)==EXIT_SUCCESS)
 
 
 typedef struct cmd_line_t {

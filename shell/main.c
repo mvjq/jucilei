@@ -33,11 +33,19 @@ int main (int argc, char *argv[]) {
     char cmd[256];
     int ret;
 
+    ret = shell_init() ;
+
+    if (ret < 0) {
+        return -1;
+    }
+
     while (printf("$ "), fgets (cmd, 256, stdin) != NULL) {
         ret = create_job (cmd);
-        if (ret==-1)
-            puts ("Syntax Error");
-        run_fg_job();
+        if (IS_SYNTAX_ERROR (ret)) {
+            puts ("Syntax Error!");
+        }
+        else if (IS_CMD_LINE_OK (ret))
+            run_fg_job();
     }
 
 

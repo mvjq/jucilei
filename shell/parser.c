@@ -85,6 +85,13 @@ returns -1 in case of error
 int pipe_list_push_cmd (cmd_line_t *cmd_line, const char *cmd_str, size_t n) {
     struct qelem *nelem = new_qelem (cmd_str, n); 
     sysfail (nelem==NULL, -1);
+
+    if (strlen (nelem->q_data) == 0) {
+        free (nelem->q_data);
+        free (nelem);
+        return EMPTY_LINE;
+    }
+
     insque (nelem, cmd_line->pipe_list_tail);
     cmd_line->pipe_list_tail = nelem;
     if (cmd_line->pipe_list_head == NULL)
@@ -126,6 +133,12 @@ int parse_cmd_line (cmd_line_t *cmd_line, const char *cmd) {
     if (prv_cmd_beg < cmd_len) {
         raux = pipe_list_push_cmd (cmd_line, cmd + prv_cmd_beg, i-prv_cmd_beg);
         sysfail (raux<0, -1);
+        if (IS_EMPTY_LINE (raux)) {
+            if (cmd_line->pipe_list_head != NULL)
+                ret |= SYNTAX_ERROR;
+            else ret |= EMPTY_LINE;
+            return ret;
+        }
         prv_cmd_beg = i + 1;
     }
 
@@ -138,8 +151,9 @@ int parse_cmd_line (cmd_line_t *cmd_line, const char *cmd) {
             io_redir_seen = (IS_INPUT_REDIR (cmd[i])) ? 0 : 1;
         }
         else if (IS_PIPE (cmd[i]))
-                ret |= 2;
+                ret |= SYNTAX_ERROR;
     }
+
     if (prv_cmd_beg < cmd_len && io_redir_seen != -1) 
         cmd_line->io[io_redir_seen] = stringndup (cmd + prv_cmd_beg, i-prv_cmd_beg);
 

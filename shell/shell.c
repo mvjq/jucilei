@@ -49,8 +49,20 @@ void job_list_rem (qelem *q) {
         job_list_head = job_list_head->q_forw;
     if (q == job_list_tail)
         job_list_tail = job_list_tail->q_back;
-    free (q);
     release_job ((job_t*) q->q_data);
+    free (q);
+}
+
+int shell_init () {
+    fg_job = NULL;
+    job_list_head = job_list_tail = NULL;
+    signal (SIGINT, SIG_IGN);
+    signal (SIGQUIT, SIG_IGN);
+    signal (SIGTSTP, SIG_IGN);
+    signal (SIGTTIN, SIG_IGN);
+    signal (SIGTTOU, SIG_IGN);
+    signal (SIGCHLD, SIG_IGN);
+    return EXIT_SUCCESS;
 }
 
 void _sigchld_handler (int signum) {
@@ -74,10 +86,13 @@ void _sigchld_handler (int signum) {
             else 
                 completed_all = 0;
         }
+        /*
+        we do not remove now 
+         */
         if (completed_all) {
             if (IS_FG_JOB (job)) 
                 fg_job = NULL;
-            job_list_rem (q);
+            job->completed = 1;
         }
     }
 }
@@ -118,9 +133,8 @@ int create_job (const char *cmd) {
     aux = parse_cmd_line (cmd_line, cmd);
     job = new_job(STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO);
 
-    if (IS_SYNTAX_ERROR (aux)) {
-        puts ("Syntax Error");
-        ret = -1;
+    if (!IS_CMD_LINE_OK (aux)) {
+        ret = aux;
         goto release_stuff;
     }
 

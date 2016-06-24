@@ -33,6 +33,8 @@ job_t* new_job (int input_redir, int output_redir, int error_redir) {
     created_job->io[0]=input_redir;
     created_job->io[1]=output_redir;
     created_job->io[2]=error_redir;
+    created_job->completed = 0;
+    created_job->stopped = 0;
     return created_job;
 }
 
@@ -85,6 +87,7 @@ char job_completed (job_t *job) {
     /*checks if evry procces is completed*/
     for (;ptr != NULL; ptr = ptr->q_forw)
         has &= ((process_t *)ptr->q_data)->completed == 1;
+    job->completed = has;
     return has;
 }
 
@@ -98,18 +101,20 @@ int run_job (job_t *job) {
     int pipefd[2], input_redir, output_redir, error_redir;
     if (job == NULL)
         return -1;
-    input_redir = job->io[0];
-    error_redir = job->io[2];
+    input_redir = job->io[STDIN_FILENO];
+    error_redir = job->io[STDERR_FILENO];
 
     /*
        not sure if this rly works :)
      */
     for (ptr = job->process_list_head; ptr != NULL; ptr = ptr->q_forw) {
-        if (ptr->q_forw != NULL) {
+        if (ptr->q_forw != NULL) 
             sysfail (pipe (pipefd)<0, -1);
-            output_redir = pipefd[1];
-        }
+
+        output_redir = (ptr->q_forw) ? pipefd[1]: job->io[STDOUT_FILENO];
+
         proc = (process_t *)ptr->q_data;
+        printf ("[a] %d %d\n", input_redir, output_redir);
         pid = run_process (proc, input_redir, output_redir, error_redir);
         pgid = (!pgid) ? pid : pgid;
 
