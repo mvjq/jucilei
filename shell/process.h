@@ -25,10 +25,6 @@
 #define CMD_MAXARGS 256
 
 #define RUN_PROC_FAILURE 0
-/*
-returns the pid of the child
-(input,output,error)_redir are file descriptors
- */
 
 typedef struct {
     pid_t pid;
@@ -45,6 +41,8 @@ void release_process (process_t *proc);
 
 /*
 this function alters the pid attribute in proc 
+returns the pid of the child
+(input,output,error)_redir are file descriptors
  */
 pid_t run_process (process_t *proc, int input_redir, int output_redir, int error_redir);
 

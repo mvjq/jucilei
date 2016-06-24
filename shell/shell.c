@@ -38,24 +38,46 @@ qelem *job_list_head, *job_list_tail;
  */
 job_t *fg_job = NULL;
 
+#define IS_FG_JOB(job) (((job_t*)(job))==fg_job) 
+
+/*
+TODO: put this in utils.h as a define function 
+ */
+void job_list_rem (qelem *q) {
+    remque (q);
+    if (q == job_list_head)
+        job_list_head = job_list_head->q_forw;
+    if (q == job_list_tail)
+        job_list_tail = job_list_tail->q_back;
+    free (q);
+    release_job ((job_t*) q->q_data);
+}
+
 void _sigchld_handler (int signum) {
     qelem *p, *q;
     process_t *proc;
-    char completed_all = 1;
+    job_t *job;
 
-    if (fg_job) {
+    for (q = job_list_head; q != NULL; q = q->q_forw) {
+        
+        char completed_all = 1;
+        job = (job_t*) q->q_data;
         for (p = fg_job->process_list_head; p != NULL; p = p->q_forw) {
-            
+
             proc = (process_t*) p->q_data;
             if (proc->completed)
                 continue;
-            if (waitpid (proc->pid, &proc->status, WNOHANG))
+            if (waitpid (proc->pid, &proc->status, WNOHANG)) {
+                proc->status = (WIFEXITED (proc->status)) ? WEXITSTATUS (proc->status): -1;
                 proc->completed = 1;
+            }
             else 
                 completed_all = 0;
         }
         if (completed_all) {
-            fg_job = NULL;
+            if (IS_FG_JOB (job)) 
+                fg_job = NULL;
+            job_list_rem (q);
         }
     }
 }
