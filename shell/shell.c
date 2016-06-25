@@ -30,6 +30,8 @@
 #include "process.h"
 #include "job.h"
 
+#define IS_FG_JOB(job) (((job_t*)(job))==fg_job) 
+
 /**/
 qelem *job_list_head, *job_list_tail;
 
@@ -38,7 +40,9 @@ qelem *job_list_head, *job_list_tail;
  */
 job_t *fg_job = NULL;
 
-#define IS_FG_JOB(job) (((job_t*)(job))==fg_job) 
+pid_t shell_pgid;
+/*file descriptor from which the shell interacts with*/
+int shell_terminal;
 
 /*
 TODO: put this in utils.h as a define function 
@@ -53,6 +57,9 @@ void job_list_rem (qelem *q) {
     free (q);
 }
 
+/*
+returns -1 in case of failure 
+ */
 int shell_init () {
     fg_job = NULL;
     job_list_head = job_list_tail = NULL;
@@ -62,6 +69,14 @@ int shell_init () {
     signal (SIGTTIN, SIG_IGN);
     signal (SIGTTOU, SIG_IGN);
     signal (SIGCHLD, SIG_IGN);
+    shell_terminal = STDIN_FILENO;
+    shell_pgid = getpid ();
+
+    sysfail (setpgid (shell_pgid, shell_pgid) < 0, -1);
+
+    /*takes controll of the terminal as a foreground procces group*/
+    tcsetpgrp (shell_terminal, shell_pgid);
+
     return EXIT_SUCCESS;
 }
 
@@ -100,6 +115,7 @@ void _sigchld_handler (int signum) {
 int run_fg_job() {
     while (fg_job != NULL)
         pause();
+    tcsetpgrp (STDIN_FILENO, shell_pgid);
     return EXIT_SUCCESS;
 }
 
@@ -147,12 +163,8 @@ int create_job (const char *cmd) {
         }
     }
 
-    for (ptr = job->process_list_head;ptr != NULL; ptr=ptr->q_forw) {
-        printf ("%s\n", ((process_t*) ptr->q_data)->argv[0]);
-    }
-
-    /*running */
-    aux = run_job (job);
+    /*running (need to know if it's foreground)*/
+    aux = run_job (job, cmd_line->is_nonblock == 0);
 
     /*problem with running the job*/
     if (aux == -1) {

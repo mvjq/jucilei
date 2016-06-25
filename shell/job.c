@@ -94,7 +94,7 @@ char job_completed (job_t *job) {
 /*
 the caller is in charge of waiting for the processes created! 
  */
-int run_job (job_t *job) {
+int run_job (job_t *job, char is_fg) {
     qelem *ptr;
     process_t *proc;
     pid_t pid, pgid = 0;
@@ -114,16 +114,24 @@ int run_job (job_t *job) {
         output_redir = (ptr->q_forw) ? pipefd[1]: job->io[STDOUT_FILENO];
 
         proc = (process_t *)ptr->q_data;
-        printf ("[a] %d %d\n", input_redir, output_redir);
-        pid = run_process (proc, input_redir, output_redir, error_redir);
+
+        pid = run_process (proc, pgid, input_redir, output_redir, error_redir, is_fg);
         pgid = (!pgid) ? pid : pgid;
 
         /*putting everyone in the same process group*/
         setpgid (pid, pgid);
 
+        /*closin pipes*/
+        if (output_redir != job->io[STDOUT_FILENO])
+            close (output_redir);
+        if (input_redir != job->io[STDIN_FILENO])
+            close (input_redir);
+
         input_redir = pipefd[0];
     }
+
     job->pgid = pgid;
+
     return EXIT_SUCCESS;
 }
 

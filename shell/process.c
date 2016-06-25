@@ -56,7 +56,7 @@ void release_process (process_t *proc) {
     free (proc);
 }
 
-pid_t run_process (process_t *proc, int input_redir, int output_redir, int error_redir) {
+pid_t run_process (process_t *proc, pid_t pgid, int input_redir, int output_redir, int error_redir, char is_fg) {
     pid_t pid;
     pid = fork();
 
@@ -65,14 +65,37 @@ pid_t run_process (process_t *proc, int input_redir, int output_redir, int error
     proc->pid = pid;
 
     if (pid == 0) { /*child*/
-        /*io redirection*/
-        if (input_redir != STDIN_FILENO)
-            sysfail (dup2 (input_redir, STDIN_FILENO)<0, RUN_PROC_FAILURE);
-        if (output_redir != STDOUT_FILENO)
-            sysfail (dup2 (input_redir, STDOUT_FILENO)<0, RUN_PROC_FAILURE);
-        if (error_redir != STDERR_FILENO)
-            sysfail (dup2 (input_redir, STDERR_FILENO)<0, RUN_PROC_FAILURE);
 
+        pid = getpid();
+        if (!pgid)
+            pgid = pid;
+        setpgid (pid, pgid);
+
+        if (is_fg)
+            tcsetpgrp (STDIN_FILENO, pgid);
+
+        signal (SIGINT, SIG_DFL);
+        signal (SIGQUIT, SIG_DFL);
+        signal (SIGTSTP, SIG_DFL);
+        signal (SIGTTIN, SIG_DFL);
+        signal (SIGTTOU, SIG_DFL);
+        signal (SIGCHLD, SIG_DFL);
+
+        /*io redirection*/
+        if (input_redir != STDIN_FILENO) {
+            sysfail (dup2 (input_redir, STDIN_FILENO)<0, RUN_PROC_FAILURE);
+            close (input_redir);
+        }
+        if (output_redir != STDOUT_FILENO) {
+            sysfail (dup2 (output_redir, STDOUT_FILENO)<0, RUN_PROC_FAILURE);
+            close (output_redir);
+        }
+        if (error_redir != STDERR_FILENO) {
+            sysfail (dup2 (error_redir, STDERR_FILENO)<0, RUN_PROC_FAILURE);
+            close (error_redir);
+        }
+
+        
         execvp (proc->argv[0], proc->argv);
         /*if we reached here something wronog happend with exec*/
         return RUN_PROC_FAILURE;

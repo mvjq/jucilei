@@ -51,7 +51,7 @@ char job_completed (job_t *job);
 /*
 runs every process in the pipeline 
  */
-int run_job (job_t *job);
+int run_job (job_t *job, char is_fg);
 
 /*
    returns a process with the given pid
