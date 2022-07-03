@@ -1,5 +1,5 @@
 # jucilei
-jucilei
+jucilei - a shell implementation  (for learning purposes only)
 
 notes about libruncmd:
 
